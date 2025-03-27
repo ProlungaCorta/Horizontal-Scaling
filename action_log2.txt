@@ -1,0 +1,26 @@
+2025-03-27 11:03:18 - Scaling_Check_Sevice Started
+
+2025-03-27 11:03:18 - Checking 1-Minute load average of the machine 01, from the pool web, (0.1, 0.6, 1.5)
+2025-03-27 11:03:18 - The load average is below the tresholds, downscale needed
+2025-03-27 11:03:18 - Performing downscale
+2025-03-27 11:03:18 - Downscale done successfully
+2025-03-27 11:03:18 - Downscale terminated in 0.001 secondi
+
+2025-03-27 11:03:18 - Checking 1-Minute load average of the machine 02, from the pool web, (0.1, 0.6, 1.5)
+2025-03-27 11:03:18 - The load average is below the tresholds, downscale needed
+2025-03-27 11:03:18 - Performing downscale
+2025-03-27 11:03:18 - Downscale done successfully
+2025-03-27 11:03:18 - Downscale terminated in 0.005 secondi
+
+2025-03-27 11:03:18 - Checking 1-Minute load average of the machine 01, from the pool db, (0.4, 0.7, 0.7)
+2025-03-27 11:03:18 - The load average is within the tresholds, nothing to do
+2025-03-27 11:03:18 - Check terminated in 0.005 secondi
+
+2025-03-27 11:03:18 - Checking 5-Minute load average of the machine 01, from the pool db, (0.4, 0.7, 0.7)
+2025-03-27 11:03:18 - The load average is below the tresholds, downscale needed
+2025-03-27 11:03:18 - Performing downscale
+2025-03-27 11:03:18 - Downscale done successfully
+2025-03-27 11:03:18 - Downscale terminated in 0.006 secondi
+
+2025-03-27 11:03:18 - Script Terminated
+

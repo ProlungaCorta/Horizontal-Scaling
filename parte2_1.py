@@ -178,8 +178,6 @@ def main():
     # Grab thresholds
     load_thresholds()
 
-    current_time = int(time.time())
-
     check_load()
 
 
