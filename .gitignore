@@ -174,5 +174,3 @@ cython_debug/
 .pypirc
 
 a.py
-
-.gitignore
