@@ -7,12 +7,15 @@ import json
 ACTION_LOG_FILE = 'action_log.txt'
 timer = 0
 
+####################################################################################################################################
+
 # Write to the action log file
 def log_action(message):
     with open(ACTION_LOG_FILE, 'a') as log_file:
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
         log_file.write(f"{timestamp} - {message}\n")
 
+####################################################################################################################################
 
 # Load JSON
 def load_thresholds(config_file):
@@ -32,6 +35,8 @@ def load_thresholds(config_file):
         print(f"Error: Configuration file '{config_file}' not found.")
         exit(1)
 
+####################################################################################################################################
+
 # LOAD AVERAGES
 def get_load_averages():
     try:
@@ -45,6 +50,8 @@ def get_load_averages():
         print(f"Error fetching load averages: {e}")
         exit(1)
 
+####################################################################################################################################
+
 # UPSCALE
 def perform_upscale():
     log_action("Performing upscaling")
@@ -55,6 +62,8 @@ def perform_upscale():
     log_action(f"Script terminated in {(current_time - first_run_time):.3f} secondi\n")
     exit(0)
 
+####################################################################################################################################
+
 # DOWNSCALE
 def perform_downscale():
     log_action("Performing downscaling")
@@ -64,6 +73,8 @@ def perform_downscale():
     log_action("Downscale done successfully")
     log_action(f"Script terminated in {(current_time - first_run_time):.3f} secondi\n")
     exit(0)
+
+####################################################################################################################################
 
 # CHECK UPSCALE / DOWNSCALE / TIMER
 def check_load(load_avg, threshold_high, threshold_low, last_run_file):
@@ -79,6 +90,8 @@ def check_load(load_avg, threshold_high, threshold_low, last_run_file):
         perform_downscale()
     else:
         log_action("The load average is within the tresholds, nothing to do")
+
+####################################################################################################################################
 
 # MAIN
 def main():
@@ -134,6 +147,8 @@ def main():
 
     # Update status after script execution
     log_action("Script Terminated\n")
+
+####################################################################################################################################
 
 if __name__ == "__main__":
     main()
