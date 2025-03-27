@@ -1,0 +1,104 @@
+2025-03-26 11:05:17 - Script started
+2025-03-26 11:05:17 - Timer in progress, 99999883 seconds left
+2025-03-26 11:05:17 - Script terminated
+
+2025-03-26 11:05:51 - Script started
+2025-03-26 11:05:51 - Using pool type: test_nothing
+	- 1-minute Load average: 0.94
+	- 5-minute Load average: 0.99
+	- 15-minute Load average: 1.0
+2025-03-26 11:05:51 - Checking 1-Minute load average:
+	- The load average is within the tresholds, nothing to do
+2025-03-26 11:05:51 - Checking 5-Minute load average:
+	- The load average is within the tresholds, nothing to do
+2025-03-26 11:05:51 - Checking 15-Minute load average:
+	- The load average is within the tresholds, nothing to do
+2025-03-26 11:05:51 - Script Terminated
+
+2025-03-26 11:06:34 - Script started
+2025-03-26 11:06:34 - Using pool type: test_upscale
+	- 1-minute Load average: 1.14
+	- 5-minute Load average: 1.02
+	- 15-minute Load average: 1.01
+2025-03-26 11:06:34 - Checking 1-Minute load average:
+	- The load average is higher then the tresholds, upscaling needed
+2025-03-26 11:06:34 - Performing upscaling
+	- Upscale done successfully
+2025-03-26 11:06:34 - Script terminated
+
+2025-03-26 11:07:59 - Script started
+2025-03-26 11:07:59 - Using pool type: test_upscale	 (1.03, 0.97, 0.99)
+2025-03-26 11:07:59 - Checking 1-Minute load average:
+	- The load average is higher then the tresholds, upscaling needed
+2025-03-26 11:07:59 - Performing upscaling
+	- Upscale done successfully
+2025-03-26 11:07:59 - Script terminated
+
+2025-03-26 11:09:13 - Script tarted
+2025-03-26 11:09:13 - Using pool type: test_upscale	 (1.27, 1.04, 1.02
+2025-03-26 11:09:13 - Checking 1-Minute load average:
+2025-03-26 11:09:13 - The load average is higher then the tresholds, upscaling needed
+2025-03-26 11:09:13 - Performing upscaling
+2025-03-26 11:09:13 - Upscale done successfully
+2025-03-26 11:09:13 - Script terminated
+
+2025-03-26 11:09:25 - (name) Started
+2025-03-26 11:09:25 - Using pool type: test_upscale	 (1.39, 1.07, 1.03)
+2025-03-26 11:09:25 - Checking 1-Minute load average:
+2025-03-26 11:09:25 - The load average is higher then the tresholds, upscaling needed
+2025-03-26 11:09:25 - Performing upscaling
+2025-03-26 11:09:25 - Upscale done successfully
+2025-03-26 11:09:25 - Script terminated in (tempo)2025-03-26 11:44:54 - Scaling_Check_Sevice Started
+2025-03-26 11:44:54 - Using pool type: test_upscale	 (1.66, 1.29, 0.78)
+
+2025-03-26 11:44:54 - Checking 1-Minute load average:
+2025-03-26 11:44:54 - The load average is higher then the tresholds, upscaling needed
+2025-03-26 11:44:54 - Performing upscaling
+2025-03-26 11:44:54 - Upscale done successfully
+2025-03-26 11:44:54 - Script terminated in 0.860 secondi
+
+2025-03-26 11:52:47 - Scaling_Check_Sevice Started
+2025-03-26 11:52:47 - Using pool type: test_upscale	 (0.93, 1.02, 0.86)
+
+2025-03-26 11:52:47 - Checking 1-Minute load average:
+2025-03-26 11:52:47 - The load average is higher then the tresholds, upscaling needed
+2025-03-26 11:52:47 - Performing upscaling
+2025-03-26 11:52:47 - Upscale done successfully
+2025-03-26 11:52:47 - Script terminated in -0.009000062942504883 secondi
+
+2025-03-26 11:55:18 - Scaling_Check_Sevice Started
+2025-03-26 11:55:18 - Using pool type: test_upscale	 (0.55, 0.8, 0.8)
+
+2025-03-26 11:55:18 - Checking 1-Minute load average:
+2025-03-26 11:55:18 - The load average is higher then the tresholds, upscaling needed
+2025-03-26 11:55:18 - Performing upscaling
+2025-03-26 11:55:18 - Upscale done successfully
+2025-03-26 11:55:18 - Script terminated in 0.010999917984008789 secondi
+
+2025-03-26 11:55:54 - Scaling_Check_Sevice Started
+2025-03-26 11:55:54 - Using pool type: test_upscale	 (1.33, 0.96, 0.85)
+
+2025-03-26 11:55:54 - Checking 1-Minute load average:
+2025-03-26 11:55:54 - The load average is higher then the tresholds, upscaling needed
+2025-03-26 11:55:54 - Performing upscaling
+2025-03-26 11:55:54 - Upscale done successfully
+2025-03-26 11:55:54 - Script terminated in 0.009000062942504883 secondi
+
+2025-03-27 08:46:57 - Scaling_Check_Sevice Started
+2025-03-27 08:46:57 - Using pool type: test_upscale	 (4.0, 4.08, 3.54)
+
+2025-03-27 08:46:57 - Checking 1-Minute load average:
+2025-03-27 08:46:57 - The load average is higher then the tresholds, upscaling needed
+2025-03-27 08:46:57 - Performing upscaling
+2025-03-27 08:46:57 - Upscale done successfully
+2025-03-27 08:46:57 - Script terminated in 0.009999990463256836 secondi
+
+2025-03-27 08:47:50 - Scaling_Check_Sevice Started
+2025-03-27 08:47:50 - Using pool type: test_upscale	 (2.95, 3.76, 3.46)
+
+2025-03-27 08:47:50 - Checking 1-Minute load average:
+2025-03-27 08:47:50 - The load average is higher then the tresholds, upscaling needed
+2025-03-27 08:47:50 - Performing upscaling
+2025-03-27 08:47:50 - Upscale done successfully
+2025-03-27 08:47:50 - Script terminated in 0.012 secondi
+
