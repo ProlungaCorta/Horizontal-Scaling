@@ -19,7 +19,7 @@ def load_thresholds(config_file):
         with open(config_file, 'r') as file:
             config = json.load(file) 
             
-            pool_type = config.get('pool_type')
+            web_t = config["Web_pool"]
             
             if pool_type in config:
                 thresholds = config[pool_type]  # THRESHOLDS

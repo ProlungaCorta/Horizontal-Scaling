@@ -1,4 +1,10 @@
-import time
+import json
 
-a= 1742990154.561 - 1742990154.552
-print(a)
+config_file = "threshold2.conf"
+
+with open(config_file, 'r') as file:
+            config = json.load(file) 
+            
+            web_t = config["Web"]
+            print(web_t)
+            print(web_t['THRESHOLD_LOW_1MIN'])
