@@ -1,6 +1,4 @@
-import os
 import time
-import subprocess
 import json
 
 ACTION_LOG_FILE = 'action_log2.txt'
