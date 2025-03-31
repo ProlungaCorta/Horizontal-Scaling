@@ -1,0 +1,61 @@
+{
+    "web": {
+        "first_creation_timestamp": "2025-03-31 10:42:01",
+        "machine_count": 2,
+        "last_action_timestamp": "2025-03-31 10:43:18",
+        "timer_timestamp_in_epoch": 1743417798,
+        "last_action_performed": "outscale",
+        "machines": {
+            "1": {
+                "creation_date": "2025-03-31 08:24:49",
+                "last_load_averages": [
+                    10.0,
+                    10.0,
+                    10.0
+                ]
+            },
+            "2": {
+                "creation_date": "2025-03-31 10:43:18",
+                "last_load_averages": [
+                    10.0,
+                    10.0,
+                    10.0
+                ]
+            }
+        }
+    },
+    "db": {
+        "first_creation_timestamp": "2025-03-31 10:42:01",
+        "machine_count": 1,
+        "last_action_timestamp": "2025-03-31 10:43:18",
+        "timer_timestamp_in_epoch": 1743417721,
+        "last_action_performed": "nothing",
+        "machines": {
+            "1": {
+                "creation_date": "2025-03-31 08:24:49",
+                "last_load_averages": [
+                    0.4,
+                    0.7,
+                    0.7
+                ]
+            }
+        }
+    },
+    "monit": {
+        "first_creation_timestamp": "2025-03-31 10:42:01",
+        "machine_count": 1,
+        "last_action_timestamp": "2025-03-31 10:42:01",
+        "timer_timestamp_in_epoch": 1743417721,
+        "last_action_performed": "no_data",
+        "machines": {
+            "1": {
+                "creation_date": "2025-03-31 08:24:49",
+                "last_load_averages": [
+                    0.0,
+                    0.0,
+                    0.0
+                ]
+            }
+        }
+    }
+}

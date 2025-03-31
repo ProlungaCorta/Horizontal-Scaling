@@ -6,7 +6,6 @@ ACTION_LOG_FILE = 'action_log2.txt'
 CONFIG_FILE_PATH = 'threshold2.conf'
 INPUT_FILE_PATH = "test.txt"
 STATUS_FILE_PATH = 'status.json'
-last_run_file = '/tmp/last_run_time'
 first_run_time = float(f"{time.time():.3f}")
 
 ####################################################################################################################################
@@ -16,6 +15,26 @@ def log_action(message):
     with open(ACTION_LOG_FILE, 'a') as log_file:
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
         log_file.write(f"{timestamp} - {message}\n")
+
+####################################################################################################################################
+
+def check_status_timer(pool_name):
+    with open(STATUS_FILE_PATH, 'r') as file:
+        status = json.load(file)
+    
+    timer = status[pool_name]["timer_timestamp_in_epoch"]
+    if (int(time.time()) - timer) <= 300:
+        return False
+    else:
+        return True
+    
+####################################################################################################################################
+
+def check_machine_number(pool_name):
+    with open(STATUS_FILE_PATH, 'r') as file:
+        status = json.load(file)
+    return status[pool_name]["machine_count"]
+    
 
 ####################################################################################################################################
 
@@ -48,6 +67,7 @@ def update_status(pool_name, machine_id, action, loads):
         status[pool_name]["machines"][new_machine_id] = new_machine_data
         status[pool_name]["machine_count"] += 1
     elif action == "inscale":
+        status[pool_name]["timer_timestamp_in_epoch"] = current_time
         # Remove the last machine based on the highest machine_id
         last_machine_id = str(status[pool_name]["machine_count"])  # Get the ID of the last machine
         if last_machine_id in status[pool_name]["machines"]:
@@ -113,11 +133,8 @@ def create_status_file_from_config():
 def load_thresholds():
     try:
         with open(CONFIG_FILE_PATH, 'r') as file:
-            config = json.load(file) 
-            global web_t, db_t, monit_t
-            web_t = config["web"]
-            db_t = config["db"]
-            monit_t = config["monit"]
+            thresholds = json.load(file) 
+        return thresholds
     except FileNotFoundError:
         print(f"Error: Configuration file '{CONFIG_FILE_PATH}' not found.")
         exit(1)
@@ -155,62 +172,66 @@ def read_file_lines_to_list():
 ####################################################################################################################################
 
 # CHECK UPSCALE / DOWNSCALE / TIMER
-def check_load():
+def check_load(thresholds):
     
     lines = read_file_lines_to_list()
+
     for line in lines:
-        averages = parse_load_averages(line)
-        if averages[0] == "web":
-            log_action(f"Checking 1-Minute load average of the machine {averages[1]}, from the pool {averages[0]}, {averages[2], averages[3], averages[4]}")
-            if check_single_load(averages[2], web_t['THRESHOLD_LOW_1MIN'], web_t['THRESHOLD_HIGH_1MIN'], averages):
-                continue
-            log_action(f"Checking 5-Minute load average of the machine {averages[1]}, from the pool {averages[0]}, {averages[2], averages[3], averages[4]}")
-            if check_single_load(averages[3], web_t['THRESHOLD_LOW_15MIN'], web_t['THRESHOLD_HIGH_15MIN'], averages):
-                continue
-            log_action(f"Checking 15-Minute load average of the machine {averages[1]}, from the pool {averages[0]}, {averages[2], averages[3], averages[4]}")
-            if check_single_load(averages[4], web_t['THRESHOLD_LOW_5MIN'], web_t['THRESHOLD_HIGH_5MIN'], averages):
-                continue
-        
-        if averages[0] == "db":
-            log_action(f"Checking 1-Minute load average of the machine {averages[1]}, from the pool {averages[0]}, {averages[2], averages[3], averages[4]}")
-            if check_single_load(averages[2], db_t['THRESHOLD_LOW_1MIN'], db_t['THRESHOLD_HIGH_1MIN'], averages):
-                continue
-            log_action(f"Checking 5-Minute load average of the machine {averages[1]}, from the pool {averages[0]}, {averages[2], averages[3], averages[4]}")
-            if check_single_load(averages[3], db_t['THRESHOLD_LOW_15MIN'], db_t['THRESHOLD_HIGH_15MIN'], averages):
-                continue
-            log_action(f"Checking 15-Minute load average of the machine {averages[1]}, from the pool {averages[0]}, {averages[2], averages[3], averages[4]}")
-            if check_single_load(averages[4], db_t['THRESHOLD_LOW_5MIN'], db_t['THRESHOLD_HIGH_5MIN'], averages):
-                continue
-        
-        if averages[0] == "monit":
-            log_action(f"Checking 1-Minute load average of the machine {averages[1]}, from the pool {averages[0]}, {averages[2], averages[3], averages[4]}")
-            if check_single_load(averages[2], monit_t['THRESHOLD_LOW_1MIN'], monit_t['THRESHOLD_HIGH_1MIN'], averages):
-                continue
-            log_action(f"Checking 5-Minute load average of the machine {averages[1]}, from the pool {averages[0]}, {averages[2], averages[3], averages[4]}")
-            if check_single_load(averages[3], monit_t['THRESHOLD_LOW_15MIN'], monit_t['THRESHOLD_HIGH_15MIN'], averages):
-                continue
-            log_action(f"Checking 15-Minute load average of the machine {averages[1]}, from the pool {averages[0]}, {averages[2], averages[3], averages[4]}")
-            if check_single_load(averages[4], monit_t['THRESHOLD_LOW_5MIN'], monit_t['THRESHOLD_HIGH_5MIN'], averages):
-                continue
+        line_data = parse_load_averages(line)
+        log_action(f"Checking 1-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
+        if check_single_load(line_data[2], thresholds[line_data[0]]['THRESHOLD_LOW_1MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_1MIN'], line_data):
+            continue
+        log_action(f"Checking 5-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
+        if check_single_load(line_data[3], thresholds[line_data[0]]['THRESHOLD_LOW_15MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_15MIN'], line_data):
+            continue
+        log_action(f"Checking 15-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
+        if check_single_load(line_data[4], thresholds[line_data[0]]['THRESHOLD_LOW_5MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_5MIN'], line_data):
+            continue
 
 ####################################################################################################################################
 
-def check_single_load(load_avg, threshold_low, threshold_high, averages):
+def check_single_load(load_avg, threshold_low, threshold_high, line_data):
     if load_avg > threshold_high:
-        with open(last_run_file, 'w') as f:
-            f.write(str(int(time.time())))
         log_action("The load average is higher then the tresholds, upscaling needed")
-        perform_upscale()
-        return True
+        if check_status_timer(line_data[0]):
+            update_status(line_data[0], line_data[1], "outscale", [line_data[2], line_data[3], line_data[4]])
+            perform_upscale()
+            return True
+        elif check_machine_number(line_data[0]) >= 10:
+            log_action("Max number of machines reached, outscale aborted")
+            update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
+            current_time = float(f"{time.time():.3f}")
+            log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
+            return False
+        else:
+            log_action("Timer in progress, outscale aborted")
+            update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
+            current_time = float(f"{time.time():.3f}")
+            log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
+            return False
+        
     elif load_avg < threshold_low:
-        with open(last_run_file, 'w') as f:
-            f.write(str(int(time.time())))
         log_action("The load average is below the tresholds, downscale needed")
-        perform_downscale()
-        return True
+        if check_status_timer(line_data[0]):
+            update_status(line_data[0], line_data[1], "inscale", [line_data[2], line_data[3], line_data[4]])
+            perform_downscale()
+            return True
+        elif check_machine_number(line_data[0]) <= 1:
+            log_action("There is only 1 machine in the pool, outscale aborted")
+            update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
+            current_time = float(f"{time.time():.3f}")
+            log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
+            return False
+        else:
+            log_action("Timer in progress inscale aborted")
+            update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
+            current_time = float(f"{time.time():.3f}")
+            log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
+            return False
     else:
-        current_time = float(f"{time.time():.3f}")
         log_action("The load average is within the tresholds, nothing to do")
+        update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
+        current_time = float(f"{time.time():.3f}")
         log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
         return False
 
@@ -247,9 +268,9 @@ def main():
         create_status_file_from_config()
 
     # Grab thresholds
-    load_thresholds()
+    thresholds = load_thresholds()
 
-    check_load()
+    check_load(thresholds)
 
     # Update status after script execution
     log_action("Script Terminated\n")
