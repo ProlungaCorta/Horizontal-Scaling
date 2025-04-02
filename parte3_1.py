@@ -2,9 +2,9 @@ import time
 import os
 import json
 
-ACTION_LOG_FILE = 'action_log2.txt'
+ACTION_LOG_FILE = 'action_log.txt'
 CONFIG_FILE_PATH = 'threshold2.conf'
-INPUT_FILE_PATH = "test.txt"
+INPUT_FILE_PATH = "data.txt"
 STATUS_FILE_PATH = 'status.json'
 first_run_time = float(f"{time.time():.3f}")
 
@@ -15,6 +15,15 @@ def log_action(message):
     with open(ACTION_LOG_FILE, 'a') as log_file:
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
         log_file.write(f"{timestamp} - {message}\n")
+
+####################################################################################################################################
+
+# grab data from the agents to the local data file
+def pull_data():
+    with open(STATUS_FILE_PATH, 'r') as file:
+        status = json.load(file)
+    
+
 
 ####################################################################################################################################
 

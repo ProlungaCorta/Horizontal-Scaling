@@ -174,3 +174,7 @@ cython_debug/
 .pypirc
 
 a.py
+
+a2.py
+
+old_stuff/
