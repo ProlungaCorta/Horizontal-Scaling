@@ -1,6 +1,8 @@
 import time
 import os
 import json
+import asyncio
+
 
 ACTION_LOG_FILE = 'action_log.txt'
 CONFIG_FILE_PATH = 'threshold2.conf'
@@ -15,14 +17,6 @@ def log_action(message):
     with open(ACTION_LOG_FILE, 'a') as log_file:
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
         log_file.write(f"{timestamp} - {message}\n")
-
-####################################################################################################################################
-
-# grab data from the agents to the local data file
-def pull_data():
-    with open(STATUS_FILE_PATH, 'r') as file:
-        status = json.load(file)
-    
 
 
 ####################################################################################################################################
@@ -170,32 +164,20 @@ def parse_load_averages(line):
 
 ####################################################################################################################################
 
-def read_file_lines_to_list():
-    try:
-        with open(INPUT_FILE_PATH, 'r') as file:
-            lines = file.readlines()  # Read all lines into a list
-        return [line.strip() for line in lines]  # Strip trailing newlines and return the list
-    except FileNotFoundError:
-        print(f"Error: The file {INPUT_FILE_PATH} was not found.")
-
-####################################################################################################################################
-
 # CHECK UPSCALE / DOWNSCALE / TIMER
-def check_load(thresholds):
+def check_load(thresholds, data):
     
-    lines = read_file_lines_to_list()
+    line_data = parse_load_averages(data)
+    log_action(f"Checking 1-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
+    log_action("1")
+    check_single_load(line_data[2], thresholds[line_data[0]]['THRESHOLD_LOW_1MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_1MIN'], line_data)
+    log_action("2")
+    log_action(f"Checking 5-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
+    check_single_load(line_data[3], thresholds[line_data[0]]['THRESHOLD_LOW_15MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_15MIN'], line_data)
 
-    for line in lines:
-        line_data = parse_load_averages(line)
-        log_action(f"Checking 1-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
-        if check_single_load(line_data[2], thresholds[line_data[0]]['THRESHOLD_LOW_1MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_1MIN'], line_data):
-            continue
-        log_action(f"Checking 5-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
-        if check_single_load(line_data[3], thresholds[line_data[0]]['THRESHOLD_LOW_15MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_15MIN'], line_data):
-            continue
-        log_action(f"Checking 15-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
-        if check_single_load(line_data[4], thresholds[line_data[0]]['THRESHOLD_LOW_5MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_5MIN'], line_data):
-            continue
+    log_action(f"Checking 15-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
+    check_single_load(line_data[4], thresholds[line_data[0]]['THRESHOLD_LOW_5MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_5MIN'], line_data)
+
 
 ####################################################################################################################################
 
@@ -205,44 +187,38 @@ def check_single_load(load_avg, threshold_low, threshold_high, line_data):
         if check_status_timer(line_data[0]):
             update_status(line_data[0], line_data[1], "outscale", [line_data[2], line_data[3], line_data[4]])
             perform_upscale()
-            return True
         elif check_machine_number(line_data[0]) >= 10:
             log_action("Max number of machines reached, outscale aborted")
             update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
             current_time = float(f"{time.time():.3f}")
             log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
-            return False
         else:
             log_action("Timer in progress, outscale aborted")
             update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
             current_time = float(f"{time.time():.3f}")
             log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
-            return False
         
     elif load_avg < threshold_low:
         log_action("The load average is below the tresholds, downscale needed")
         if check_status_timer(line_data[0]):
             update_status(line_data[0], line_data[1], "inscale", [line_data[2], line_data[3], line_data[4]])
             perform_downscale()
-            return True
         elif check_machine_number(line_data[0]) <= 1:
             log_action("There is only 1 machine in the pool, outscale aborted")
             update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
             current_time = float(f"{time.time():.3f}")
             log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
-            return False
         else:
             log_action("Timer in progress inscale aborted")
             update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
             current_time = float(f"{time.time():.3f}")
             log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
-            return False
     else:
         log_action("The load average is within the tresholds, nothing to do")
         update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
         current_time = float(f"{time.time():.3f}")
         log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
-        return False
+
 
 ####################################################################################################################################
 
@@ -269,7 +245,7 @@ def perform_downscale():
 ####################################################################################################################################
 
 
-def main():
+def main(data):
     
     log_action("Scaling_Check_Sevice Started\n")
 
@@ -279,11 +255,43 @@ def main():
     # Grab thresholds
     thresholds = load_thresholds()
 
-    check_load(thresholds)
+    check_load(thresholds, data)
 
     # Update status after script execution
     log_action("Script Terminated\n")
+    return "done"
+
+####################################################################################################################################
+
+# Function to handle communication with each agent
+async def handle_client(reader, writer):
+    data = await reader.read(1024)  # Read up to 1024 bytes
+    message = data.decode('utf8')  # Decode the message into a string
+    addr = writer.get_extra_info('peername')  # Get the client's address
+
+    print(f"Received data: {message} from {addr}")
+
+    # Send a response back to the agent
+    response = main(message)
+    writer.write(response.encode())  # Send a response back to the agent
+    await writer.drain()  # Wait for the data to be sent completely
+
+    print("Closing the connection")
+    writer.close()  # Close the connection
+
+# Function to start the server
+async def start_master_server():
+    server = await asyncio.start_server(
+        handle_client, '127.0.0.1', 12345)  # Bind to localhost and port 12345
+    
+    addr = server.sockets[0].getsockname()
+    print(f'Serving on {addr}')
+
+    # Start the server to accept connections and handle them
+    async with server:
+        await server.serve_forever()
+
+if __name__ == '__main__':
+    asyncio.run(start_master_server())
 
 
-if __name__ == "__main__":
-    main()
