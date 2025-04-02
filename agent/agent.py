@@ -61,11 +61,8 @@ def send_data_to_master(data, host='127.0.0.1', port=12345):
 # Main logic for agent to periodically send data
 if __name__ == "__main__":
     while True:
-        
-
         # Send the data to the master script
         data = data_to_send()
         send_data_to_master(data)
-        
         # Wait before sending data again (simulate periodic task)
-        time.sleep(300)
+        time.sleep(60)
