@@ -28,3 +28,4 @@ Clone the repositoryin your Master machine:
 
 Move the contents of the agent folder in your agent machine.
 Edit the config.json and the thresolds.json with your data and you're done.
+If needed you can set those 2 scripts as services to have them run on start and 24/7
