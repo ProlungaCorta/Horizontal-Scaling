@@ -4,16 +4,15 @@ import json
 import asyncio
 
 
-ACTION_LOG_FILE = 'action_log.txt'
-CONFIG_FILE_PATH = 'threshold.conf'
-INPUT_FILE_PATH = "data.txt"
-STATUS_FILE_PATH = 'status.json'
-first_run_time = float(f"{time.time():.3f}")
+ACTION_LOG_FILE = 'action_log.txt' #path to the log file 
+CONFIG_FILE_PATH = 'threshold.conf' #path to the configuration file with the thresholds
+STATUS_FILE_PATH = 'status.json' #path to the status file, or where it should be created
+
 
 ####################################################################################################################################
 
-# Write to the action log file
-def log_action(message):
+# LOGGING
+def log_action(message):  #open the log file and append the message with the current timestamp
     with open(ACTION_LOG_FILE, 'a') as log_file:
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
         log_file.write(f"{timestamp} - {message}\n")
@@ -21,11 +20,15 @@ def log_action(message):
 
 ####################################################################################################################################
 
-def check_status_timer(pool_name):
+#TIMER
+def check_status_timer(pool_name):   
+#open the status file and read the timer timestamp (the last time an inscale or outscale was performed in epoch) and return true if 300 seconds passed and false if not 
+
     with open(STATUS_FILE_PATH, 'r') as file:
         status = json.load(file)
     
     timer = status[pool_name]["timer_timestamp_in_epoch"]
+
     if (int(time.time()) - timer) <= 300:
         return False
     else:
@@ -33,7 +36,9 @@ def check_status_timer(pool_name):
     
 ####################################################################################################################################
 
-def check_machine_number(pool_name):
+#MACHINE COUNT PER POOL
+def check_machine_number(pool_name):  
+    #open the status file and return the number of machines in a pool, so that we can remain between 1 and 10 machines
     with open(STATUS_FILE_PATH, 'r') as file:
         status = json.load(file)
     return status[pool_name]["machine_count"]
@@ -41,8 +46,12 @@ def check_machine_number(pool_name):
 
 ####################################################################################################################################
 
-def update_status(pool_name, machine_id, action, loads):
-    # Load the current status from the file
+#UPADTE STATUS
+def update_status(pool_name, machine_id, action, loads): 
+    #function to update the status file with the last action performed and last data
+
+
+    #Load the current status from the file
     with open(STATUS_FILE_PATH, 'r') as file:
         status = json.load(file)
 
@@ -50,11 +59,11 @@ def update_status(pool_name, machine_id, action, loads):
     current_time = int(time.time())
     timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
     
-    # Update the last action timestamp and performed status
+    # Update what the last action was and when it was done
     status[pool_name]["last_action_timestamp"] = timestamp
     status[pool_name]["last_action_performed"] = action
 
-    # Update machine data for the specified machine
+    # Update the machine loads data with the current ones used for the check
     status[pool_name]["machines"][machine_id]["last_load_averages"] = loads
 
     # If the action is 'outscale', add a new machine to the pool
@@ -65,14 +74,13 @@ def update_status(pool_name, machine_id, action, loads):
             "creation_date": timestamp,
             "last_load_averages": loads
         }
-
-        # Add the new machine to the pool
         status[pool_name]["machines"][new_machine_id] = new_machine_data
         status[pool_name]["machine_count"] += 1
+
+    # If the action is 'inscale', remove the last machine from the pool    
     elif action == "inscale":
         status[pool_name]["timer_timestamp_in_epoch"] = current_time
-        # Remove the last machine based on the highest machine_id
-        last_machine_id = str(status[pool_name]["machine_count"])  # Get the ID of the last machine
+        last_machine_id = str(status[pool_name]["machine_count"])
         if last_machine_id in status[pool_name]["machines"]:
             # Remove the last machine from the pool
             del status[pool_name]["machines"][last_machine_id]
@@ -88,13 +96,13 @@ def update_status(pool_name, machine_id, action, loads):
 ####################################################################################################################################
 
 #CREATE INITIAL STATUS
-def create_status_file_from_config():
+def create_status_file_from_config(): 
+    #create a status file it it doesn't exist already, this takes the pool names from the treshold file and gives them a generic machine with no data
 
-    # Load configuration from the config file
+    # Load data from the config file
     with open(CONFIG_FILE_PATH, 'r') as f:
         config_data = json.load(f)
 
-    # Get the number of pools from the config
     # Prepare the base data structure for the status file
     pools_data = {}
 
@@ -111,7 +119,7 @@ def create_status_file_from_config():
 
         pools_data[pool_name] = {
             "first_creation_timestamp": formatted_time,
-            "machine_count": 1,  # Initially one machine in each pool
+            "machine_count": 1,  # Initially one machine in every pool
             "last_action_timestamp": formatted_time,
             "timer_timestamp_in_epoch": current_time,
             "last_action_performed": "no_data",
@@ -133,7 +141,7 @@ def create_status_file_from_config():
 ####################################################################################################################################
 
 # Load JSON
-def load_thresholds():
+def load_thresholds(): #open the treshold config file and grab its contents
     try:
         with open(CONFIG_FILE_PATH, 'r') as file:
             thresholds = json.load(file) 
@@ -144,7 +152,9 @@ def load_thresholds():
 
 ####################################################################################################################################
 
+#PARSE LINES
 def parse_load_averages(line):
+    #given the line that the agent sends it separates it in single elements so that i can work with it
     try:
         # Split the line into parts based on the ' - ' separator
         parts = line.strip().split(' - ')
@@ -165,37 +175,41 @@ def parse_load_averages(line):
 ####################################################################################################################################
 
 # CHECK OUTSCALE / INSCALE / TIMER
-def check_load(thresholds, data):
+def check_load(thresholds, data, start_time):
+    #use the parse function and send the data for each load to check to the singl load check
     
     line_data = parse_load_averages(data)
     log_action(f"Checking 1-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
-    check_single_load(line_data[2], thresholds[line_data[0]]['THRESHOLD_LOW_1MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_1MIN'], line_data)
+    check_single_load(line_data[2], thresholds[line_data[0]]['THRESHOLD_LOW_1MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_1MIN'], line_data, start_time)
 
     log_action(f"Checking 5-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
-    check_single_load(line_data[3], thresholds[line_data[0]]['THRESHOLD_LOW_15MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_15MIN'], line_data)
+    check_single_load(line_data[3], thresholds[line_data[0]]['THRESHOLD_LOW_15MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_15MIN'], line_data, start_time)
 
     log_action(f"Checking 15-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
-    check_single_load(line_data[4], thresholds[line_data[0]]['THRESHOLD_LOW_5MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_5MIN'], line_data)
+    check_single_load(line_data[4], thresholds[line_data[0]]['THRESHOLD_LOW_5MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_5MIN'], line_data, start_time)
 
 
 ####################################################################################################################################
 
-def check_single_load(load_avg, threshold_low, threshold_high, line_data):
+#SINGLE CHECK
+def check_single_load(load_avg, threshold_low, threshold_high, line_data, start_time):
+    #2 major checks into 2 lower checks the first 2 ones are for: "over threshold loads", "lower then threshold loads"
+    #the other 2 are if the machine number is within 1 and 10, if the timer is still running and then i can actually perform the action
     if load_avg > threshold_high:
         log_action("The load average is higher then the tresholds, outscaling needed")
         if check_machine_number(line_data[0]) >= 10:
             log_action("Max number of machines reached, outscale aborted")
             update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
             current_time = float(f"{time.time():.3f}")
-            log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
+            log_action(f"Check terminated in {(current_time - start_time):.3f} secondi\n")
         elif check_status_timer(line_data[0]):
             update_status(line_data[0], line_data[1], "outscale", [line_data[2], line_data[3], line_data[4]])
-            perform_outscale()
+            perform_outscale(start_time)
         else:
             log_action("Timer in progress, outscale aborted")
             update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
             current_time = float(f"{time.time():.3f}")
-            log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
+            log_action(f"Check terminated in {(current_time - start_time):.3f} secondi\n")
         
     elif load_avg < threshold_low:
         log_action("The load average is below the tresholds, inscale needed")
@@ -203,94 +217,107 @@ def check_single_load(load_avg, threshold_low, threshold_high, line_data):
             log_action("There is only 1 machine in the pool, inscale aborted")
             update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
             current_time = float(f"{time.time():.3f}")
-            log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
+            log_action(f"Check terminated in {(current_time - start_time):.3f} secondi\n")
         elif check_status_timer(line_data[0]):
             update_status(line_data[0], line_data[1], "inscale", [line_data[2], line_data[3], line_data[4]])
-            perform_inscale()
+            perform_inscale(start_time)
         else:
             log_action("Timer in progress inscale aborted")
             update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
             current_time = float(f"{time.time():.3f}")
-            log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
-    else:
+            log_action(f"Check terminated in {(current_time - start_time):.3f} secondi\n")
+    else: #if the 2 checks come clean the machine is within the tresholds so there is nothing to do other then logging and updating the status
         log_action("The load average is within the tresholds, nothing to do")
         update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
         current_time = float(f"{time.time():.3f}")
-        log_action(f"Check terminated in {(current_time - first_run_time):.3f} secondi\n")
+        log_action(f"Check terminated in {(current_time - start_time):.3f} secondi\n")
 
 
 ####################################################################################################################################
 
 # OUTSCALE
-def perform_outscale():
+def perform_outscale(start_time):
+    #doesnt actually perform the outscale yet but makes the code work as if it actually did
     log_action("Performing outscale")
-    print("Upscaling")
+    print("Outscaling")
     # Record last action time
     current_time = float(f"{time.time():.3f}")
     log_action("Outscale done successfully")
-    log_action(f"Outscale terminated in {(current_time - first_run_time):.3f} secondi\n")
+    log_action(f"Outscale terminated in {(current_time - start_time):.3f} secondi\n")
 
 ####################################################################################################################################
 
 # INSCALE
-def perform_inscale():
+def perform_inscale(start_time):
+    #doesnt actually perform the insale yet but makes the code work as if it actually did
     log_action("Performing inscale")
-    print("inscaling")
+    print("Inscaling")
     # Record last action time
     current_time = float(f"{time.time():.3f}")
     log_action("Inscale done successfully")
-    log_action(f"Inscale terminated in {(current_time - first_run_time):.3f} secondi\n")
+    log_action(f"Inscale terminated in {(current_time - start_time):.3f} secondi\n")
 
 ####################################################################################################################################
 
 
-def main(data):
+def main(data, agent): #main function that start for each string of data sent to the master by the agents
     
     log_action("Scaling_Check_Sevice Started\n")
 
-    if not os.path.exists(STATUS_FILE_PATH):
+    start_time = float(f"{time.time():.3f}") # timestamp to use to get the execution time
+
+    if not os.path.exists(STATUS_FILE_PATH): #create status if it doesnt exist
         create_status_file_from_config()
 
     # Grab thresholds
-    thresholds = load_thresholds()
+    thresholds = load_thresholds() #grab the tresholds
 
-    check_load(thresholds, data)
+    check_load(thresholds, data, start_time) #start the check with
 
-    # Update status after script execution
-    log_action("Script Terminated\n")
+    #write in the logs that the check actually terminated
+    log_action(f"Check for {agent} terminated\n")
     return "done"
 
 ####################################################################################################################################
 
 # Function to handle communication with each agent
 async def handle_client(reader, writer):
-    data = await reader.read(1024)  # Read up to 1024 bytes
-    message = data.decode('utf8')  # Decode the message into a string
-    addr = writer.get_extra_info('peername')  # Get the client's address
+    # Read up to 1024 bytes of data sent by the client (agent)
+    data = await reader.read(1024)  # Asynchronously read data from the client
+    message = data.decode('utf8')  # Decode
+    addr = writer.get_extra_info('peername')  # Retrieve the client's address (IP and port)
 
+    # Print the received message and the client's address for debugging/monitoring
     print(f"Received data: {message} from {addr}")
 
-    # Send a response back to the agent
-    response = main(message)
-    writer.write(response.encode())  # Send a response back to the agent
-    await writer.drain()  # Wait for the data to be sent completely
-
-    print("Closing the connection")
-    writer.close()  # Close the connection
-
-# Function to start the server
-async def start_master_server():
-    server = await asyncio.start_server(
-        handle_client, '0.0.0.0', 12345)  # Bind to localhost and port 12345
+    # Process the received message and prepare a response using the 'main' function
+    response = main(message, addr)
+    writer.write(response.encode())  # Asynchronously send the response back to the client (encoded as bytes)
     
+    # Wait until the response is fully sent to the client (drain the output buffer)
+    await writer.drain()
+
+    # Log that the communication with the client is finished
+    print("Closing the connection")
+
+    # Close the connection with the client
+    writer.close()
+
+# Function to start the server that listens for incoming client connections
+async def start_master_server():
+    # Create and start the server that listens on all available network interfaces (0.0.0.0)
+    # and binds to port 6969
+    server = await asyncio.start_server(
+        handle_client, '0.0.0.0', 6969)  # Asynchronously start the server
+
+    # Retrieve the address (IP and port) the server is bound to
     addr = server.sockets[0].getsockname()
     print(f'Serving on {addr}')
 
-    # Start the server to accept connections and handle them
+    # Main loop 
     async with server:
         await server.serve_forever()
 
+#
 if __name__ == '__main__':
-    asyncio.run(start_master_server())
-
-
+    asyncio.run(start_master_server())  # Start the asynchronous server
