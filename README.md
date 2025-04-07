@@ -13,7 +13,6 @@ This repository contains a Python-based project aimed at implementing horizontal
 - `agent.py`: The agent nodes that send data to the master.
 - `status.json`: Stores the status of the system components.
 - `threshold.conf`: Configuration file for setting scaling thresholds and pool names.
-- `action_log.txt`: Logs the actions and events that occur in the system.
 
 ## Setup
 
@@ -29,3 +28,4 @@ Clone the repositoryin your Master machine:
 Move the contents of the agent folder in your agent machine.
 Edit the config.json and the thresolds.json with your data and you're done.
 If needed you can set those 2 scripts as services to have them run on start and 24/7
+You can also edit all file paths to customize where status and logs will be placed
