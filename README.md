@@ -1,6 +1,6 @@
 # Horizontal Scaling
 
-This repository contains a Python-based project aimed at implementing horizontal scaling techniques. The project is designed to illustrate the concept of scaling resources to handle increasing and decreasing loads by distributing the workload across multiple machines.
+This repository contains a Python-based project aimed at implementing horizontal scaling Checking techniques. The project is designed to illustrate the concept of scaling resources to handle increasing and decreasing loads by distributing the workload across multiple machines.
 
 ## Contents
 
