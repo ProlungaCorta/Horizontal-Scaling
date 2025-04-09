@@ -103,6 +103,6 @@ if __name__ == "__main__":
         log_action("Starting the data upload")
         config_data = get_data()
         data = data_to_send(config_data)
-        send_data_to_master(data, config_data['ip'], config_data["port"])
+        send_data_to_master(data, config_data['ip'], int(config_data["port"]))
         # Wait before sending data again
         time.sleep(60)

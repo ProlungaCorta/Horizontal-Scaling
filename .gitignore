@@ -181,4 +181,6 @@ old_stuff/
 
 status.json
 
-action_log.txt
+action.log
+
+logs

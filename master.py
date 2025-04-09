@@ -4,7 +4,7 @@ import json
 import asyncio
 
 
-ACTION_LOG_FILE = 'action_log.txt' #path to the log file 
+ACTION_LOG_FILE = 'action.log' #path to the log file 
 CONFIG_FILE_PATH = 'threshold.conf' #path to the configuration file with the thresholds
 STATUS_FILE_PATH = 'status.json' #path to the status file, or where it should be created
 
@@ -125,7 +125,7 @@ def create_status_file_from_config():
             "last_action_performed": "no_data",
             "machines" : {
                 "1": {
-                    "creation_date": "2025-03-31 08:24:49",
+                    "creation_date": formatted_time,
                     "last_load_averages": [0.0, 0.0, 0.0]
                 }
             }

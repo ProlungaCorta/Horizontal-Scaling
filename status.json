@@ -1,51 +1,67 @@
 {
     "web": {
-        "first_creation_timestamp": "2025-04-02 17:40:42",
-        "machine_count": 1,
-        "last_action_timestamp": "2025-04-02 17:41:45",
-        "timer_timestamp_in_epoch": 1743615642,
+        "first_creation_timestamp": "2025-04-09 10:02:11",
+        "machine_count": 3,
+        "last_action_timestamp": "2025-04-09 10:15:12",
+        "timer_timestamp_in_epoch": 1744193592,
         "last_action_performed": "nothing",
         "machines": {
             "1": {
-                "creation_date": "2025-03-31 08:24:49",
+                "creation_date": "2025-04-09 10:02:11",
                 "last_load_averages": [
-                    0.63,
-                    0.8,
-                    0.79
+                    0.54,
+                    0.59,
+                    0.72
+                ]
+            },
+            "2": {
+                "creation_date": "2025-04-09 10:08:11",
+                "last_load_averages": [
+                    0.39,
+                    0.79,
+                    0.85
+                ]
+            },
+            "3": {
+                "creation_date": "2025-04-09 10:13:12",
+                "last_load_averages": [
+                    0.34,
+                    0.52,
+                    0.71
                 ]
             }
         }
     },
     "db": {
-        "first_creation_timestamp": "2025-04-02 17:40:42",
+        "first_creation_timestamp": "2025-04-09 10:02:11",
         "machine_count": 1,
-        "last_action_timestamp": "2025-04-02 17:41:43",
-        "timer_timestamp_in_epoch": 1743615642,
-        "last_action_performed": "nothing",
+        "last_action_timestamp": "2025-04-09 10:02:11",
+        "timer_timestamp_in_epoch": 1744192931,
+        "last_action_performed": "no_data",
         "machines": {
             "1": {
-                "creation_date": "2025-03-31 08:24:49",
+                "creation_date": "2025-04-09 10:02:11",
                 "last_load_averages": [
-                    0.63,
-                    0.8,
-                    0.79
+                    0.0,
+                    0.0,
+                    0.0
                 ]
             }
         }
     },
     "monit": {
-        "first_creation_timestamp": "2025-04-02 17:40:42",
+        "first_creation_timestamp": "2025-04-09 10:02:11",
         "machine_count": 1,
-        "last_action_timestamp": "2025-04-02 17:41:42",
-        "timer_timestamp_in_epoch": 1743615642,
-        "last_action_performed": "nothing",
+        "last_action_timestamp": "2025-04-09 10:02:11",
+        "timer_timestamp_in_epoch": 1744192931,
+        "last_action_performed": "no_data",
         "machines": {
             "1": {
-                "creation_date": "2025-03-31 08:24:49",
+                "creation_date": "2025-04-09 10:02:11",
                 "last_load_averages": [
-                    0.63,
-                    0.8,
-                    0.79
+                    0.0,
+                    0.0,
+                    0.0
                 ]
             }
         }
