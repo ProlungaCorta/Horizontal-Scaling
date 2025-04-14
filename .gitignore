@@ -178,6 +178,7 @@ a.py
 a2.py
 
 old_stuff/
+t/
 
 status.json
 
