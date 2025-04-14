@@ -278,7 +278,7 @@ def perform_outscale(start_time, pool, count):
         print(f"Creating and starting agent container '{container_name}'...")
         try:
             client.containers.run(
-                f"agent_{pool}_{count}",
+                image_tag,
                 detach=True,
                 name=f"agent_{pool}_{count}",
                 network="my_network",
@@ -307,7 +307,7 @@ def perform_outscale(start_time, pool, count):
 ####################################################################################################################################
 
 # INSCALE
-def perform_inscale(start_time, pool):
+def perform_inscale(start_time, pool, count):
     #doesnt actually perform the insale yet but makes the code work as if it actually did
     log_action("Performing inscale")
     print("Inscaling")
