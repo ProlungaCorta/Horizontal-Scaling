@@ -1,13 +1,13 @@
 import socket
 import time
 import subprocess
+import os
 import json
 
 ACTION_LOG_FILE = "logs"  #path to the log file 
-CONFIG_FILE_PATH = "config.json" #path of the config file where pool and id are located
+
 
 ####################################################################################################################################
-
 
 
 # LOAD AVERAGES
@@ -44,13 +44,18 @@ def log_action(message):  #open the log file and append the message with the cur
 
 #GRAB DATA
 def get_data():  #open the config file to extract the pool, id, ip of the master and the port
-    try:
-        with open(CONFIG_FILE_PATH, 'r') as file:
-            data = json.load(file) 
-        return data
-    except FileNotFoundError:
-        print(f"Error: Configuration file '{CONFIG_FILE_PATH}' not found.")
-        exit(1)
+    s = os.environ["CONFIG_DATA"]
+
+    pairs = s.split(', ')
+
+    # Create the dictionary
+    d = {}
+    for pair in pairs:
+        key, value = pair.split(":")
+        d[key.strip()] = value.strip()
+        
+
+    return d
 
 
 

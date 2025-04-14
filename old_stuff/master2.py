@@ -2,12 +2,11 @@ import time
 import os
 import json
 import asyncio
-import docker
 
 
-ACTION_LOG_FILE = '/app/action.log' #path to the log file 
-CONFIG_FILE_PATH = '/app/threshold.conf' #path to the configuration file with the thresholds
-STATUS_FILE_PATH = '/app/status.json' #path to the status file, or where it should be created
+ACTION_LOG_FILE = 'action.log' #path to the log file 
+CONFIG_FILE_PATH = 'threshold.conf' #path to the configuration file with the thresholds
+STATUS_FILE_PATH = 'status.json' #path to the status file, or where it should be created
 
 
 ####################################################################################################################################
@@ -23,19 +22,18 @@ def log_action(message):  #open the log file and append the message with the cur
 
 #TIMER
 def check_status_timer(pool_name):   
-    
-    #open the status file and read the timer timestamp (the last time an inscale or outscale was performed in epoch) and return true if 300 seconds passed and false if not 
+#open the status file and read the timer timestamp (the last time an inscale or outscale was performed in epoch) and return true if 300 seconds passed and false if not 
 
     with open(STATUS_FILE_PATH, 'r') as file:
         status = json.load(file)
     
     timer = status[pool_name]["timer_timestamp_in_epoch"]
 
-    if (int(time.time()) - timer) <= 60:
+    if (int(time.time()) - timer) <= 300:
         return False
     else:
         return True
-
+    
 ####################################################################################################################################
 
 #MACHINE COUNT PER POOL
@@ -190,24 +188,23 @@ def check_load(thresholds, data, start_time):
     log_action(f"Checking 15-Minute load average of the machine {line_data[1]}, from the pool {line_data[0]}, {line_data[2], line_data[3], line_data[4]}")
     check_single_load(line_data[4], thresholds[line_data[0]]['THRESHOLD_LOW_5MIN'], thresholds[line_data[0]]['THRESHOLD_HIGH_5MIN'], line_data, start_time)
 
+
 ####################################################################################################################################
 
 #SINGLE CHECK
 def check_single_load(load_avg, threshold_low, threshold_high, line_data, start_time):
     #2 major checks into 2 lower checks the first 2 ones are for: "over threshold loads", "lower then threshold loads"
     #the other 2 are if the machine number is within 1 and 10, if the timer is still running and then i can actually perform the action
-    count = check_machine_number(line_data[0])
-    log_action(count)
     if load_avg > threshold_high:
         log_action("The load average is higher then the tresholds, outscaling needed")
-        if count >= 10:
+        if check_machine_number(line_data[0]) >= 10:
             log_action("Max number of machines reached, outscale aborted")
             update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
             current_time = float(f"{time.time():.3f}")
             log_action(f"Check terminated in {(current_time - start_time):.3f} secondi\n")
         elif check_status_timer(line_data[0]):
             update_status(line_data[0], line_data[1], "outscale", [line_data[2], line_data[3], line_data[4]])
-            perform_outscale(start_time, line_data[0], count)
+            perform_outscale(start_time)
         else:
             log_action("Timer in progress, outscale aborted")
             update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
@@ -216,14 +213,14 @@ def check_single_load(load_avg, threshold_low, threshold_high, line_data, start_
         
     elif load_avg < threshold_low:
         log_action("The load average is below the tresholds, inscale needed")
-        if count(line_data[0]) <= 1:
+        if check_machine_number(line_data[0]) <= 1:
             log_action("There is only 1 machine in the pool, inscale aborted")
             update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
             current_time = float(f"{time.time():.3f}")
             log_action(f"Check terminated in {(current_time - start_time):.3f} secondi\n")
         elif check_status_timer(line_data[0]):
             update_status(line_data[0], line_data[1], "inscale", [line_data[2], line_data[3], line_data[4]])
-            perform_inscale(start_time, line_data[0], count)
+            perform_inscale(start_time)
         else:
             log_action("Timer in progress inscale aborted")
             update_status(line_data[0], line_data[1], "nothing", [line_data[2], line_data[3], line_data[4]])
@@ -238,76 +235,20 @@ def check_single_load(load_avg, threshold_low, threshold_high, line_data, start_
 
 ####################################################################################################################################
 
-def perform_outscale(start_time, pool, count):
-
-    # Initialize Docker client
-    client = docker.from_env()
-    count += 1
-
-    # Setup names
-    container_name = f"agent_{pool}_{count}"
-    image_tag = f"agent_image_{pool}_{count}"
-
-    # Logging the start
-    log_action(f"Performing outscale for pool {pool}, machine count {count}")
-    print(f"Outscaling pool '{pool}', new machine ID: {count}")
-
-    # Get master container IP
-    try:
-        master_container = client.containers.get("master")
-        master_network = master_container.attrs["NetworkSettings"]["Networks"]["my_network"]
-        master_ip = master_network["IPAddress"]
-    except docker.errors.NotFound:
-        log_action("Error: Master container not found.")
-        return
-    except KeyError:
-        log_action("Error: Network settings not found on master container.")
-        return
-
-    print(f"Master IP for new agent: {master_ip}")
-
-    # Build agent config
-    config_data = f"pool: {pool}, id: {count}, ip: {master_ip}, port: 6969"
-
-    try:
-        # Build agent image
-        print(f"Building image '{image_tag}' for agent...")
-        client.images.build(path=".", dockerfile="Dockerfile.agent", tag=image_tag)
-
-        # Run agent container
-        print(f"Creating and starting agent container '{container_name}'...")
-        try:
-            client.containers.run(
-                f"agent_{pool}_{count}",
-                detach=True,
-                name=f"agent_{pool}_{count}",
-                network="my_network",
-                environment={
-                    'CONFIG_DATA': config_data
-                },
-                command=["python3", "agent.py"],
-                working_dir="/app"
-            )
-        except docker.errors.DockerException as e:
-            print(f"[ERROR] Docker failed: {e}")
-
-        # Success log
-        current_time = float(f"{time.time():.3f}")
-        log_action(f"Outscale for pool {pool} completed. New machine '{container_name}' created.")
-        log_action(f"Outscale terminated in {(current_time - start_time):.3f} seconds")
-
-    except docker.errors.BuildError as e:
-        log_action(f"Build error for image '{image_tag}': {e}")
-    except docker.errors.ContainerError as e:
-        log_action(f"Container '{container_name}' failed: {e}")
-    except docker.errors.APIError as e:
-        log_action(f"Docker API error: {e}")
-
+# OUTSCALE
+def perform_outscale(start_time):
+    #doesnt actually perform the outscale yet but makes the code work as if it actually did
+    log_action("Performing outscale")
+    print("Outscaling")
+    # Record last action time
+    current_time = float(f"{time.time():.3f}")
+    log_action("Outscale done successfully")
+    log_action(f"Outscale terminated in {(current_time - start_time):.3f} secondi\n")
 
 ####################################################################################################################################
 
 # INSCALE
-def perform_inscale(start_time, pool):
+def perform_inscale(start_time):
     #doesnt actually perform the insale yet but makes the code work as if it actually did
     log_action("Performing inscale")
     print("Inscaling")
